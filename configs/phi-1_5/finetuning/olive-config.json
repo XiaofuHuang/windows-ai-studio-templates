@@ -3,7 +3,7 @@
         "type": "PyTorchModel",
         "config": {
             "hf_config": {
-                "model_name": "model-cache/microsoft/phi-1_5",
+                "model_name": "phi-1_5",
                 "task": "text-generation",
                 "model_loading_args": {
                     "trust_remote_code": true
@@ -15,20 +15,26 @@
         "dataset-default_train": {
             "name": "dataset-default",
             "type": "HuggingfaceContainer",
+            "user_script": "./finetuning/qlora_user_script.py",
+            "components": {
+                "load_dataset": {
+                    "type": "load_tiny_code_dataset"
+                }
+            },
             "params_config": {
-#data_configs_data_files_extension_start
-            <!--    "data_name": "<data_configs_data_files_extension>", -->
-#data_configs_data_files_extension_end
-                "<data_files>":"<data_configs_data_files>",
-                "split": "<data_configs_split>",
+                "data_name": "nampdn-ai/tiny-codes",
+                "split": "train",
                 "component_kwargs": {
+                    "load_dataset": {
+                        "language": "Python",
+                        "token": true
+                    },
                     "pre_process_data": {
-                        "dataset_type": "<dataset_type>",
-                        "text_cols": <text_cols>,
-                        "text_template": "<text_template>",
-                        "corpus_strategy": "<line_by_line>",
-                        "source_max_len": <source_max_len>,
-                        "pad_to_max_len": <pad_to_max_len>,
+                        "dataset_type": "corpus",
+                        "text_template": "### Question: {prompt} \n### Answer: {response}",
+                        "corpus_strategy": "join",
+                        "source_max_len": 1024,
+                        "pad_to_max_len": false,
                         "use_attention_mask": false
                     }
                 }
@@ -39,31 +45,31 @@
         "qlora": {
             "type": "QLoRA",
             "config": {
-                "compute_dtype": "<compute_dtype>",
-                "quant_type": "<quant_type>",
-                "double_quant": <double_quant>,
-                "lora_r": <lora_r>,
-                "lora_alpha": <lora_alpha>,
-                "lora_dropout": <lora_dropout>,
+                "compute_dtype": "bfloat16",
+                "quant_type": "nf4",
+                "double_quant": true,
+                "lora_r":32,
+                "lora_alpha": 64,
+                "lora_dropout": 0.1,
                 "train_data_config": "dataset-default_train",
-                "eval_dataset_size": <eval_dataset_size>,
+                "eval_dataset_size": 0.3,
                 "training_args": {
-                    "seed": <training_args_seed>,
-                    "data_seed": <training_args_data_seed>,
-                    "per_device_train_batch_size": <per_device_train_batch_size>,
-                    "per_device_eval_batch_size": <per_device_eval_batch_size>,
-                    "gradient_accumulation_steps": <gradient_accumulation_steps>,
-                    "gradient_checkpointing": <gradient_checkpointing>,
-                    "learning_rate": <learning_rate>,
-                    "num_train_epochs":<num_train_epochs>,
-                    "max_steps": <max_steps>,
+                    "seed": 0,
+                    "data_seed": 42,
+                    "per_device_train_batch_size": 1,
+                    "per_device_eval_batch_size": 1,
+                    "gradient_accumulation_steps": 4,
+                    "gradient_checkpointing": true,
+                    "learning_rate": 0.0002,
+                    "num_train_epochs":3,
+                    "max_steps": 1875,
                     "logging_steps": 10,
                     "evaluation_strategy": "steps",
                     "eval_steps": 187,
                     "group_by_length": true,
                     "adam_beta2": 0.999,
                     "max_grad_norm": 0.3,
-                    "output_dir": "<output_dir>"
+                    "output_dir": "models/checkpoints"
                 }
             }
         }
