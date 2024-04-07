@@ -15,23 +15,18 @@
         "dataset-default_train": {
             "name": "dataset-default",
             "type": "HuggingfaceContainer",
-            "user_script": "./finetuning/qlora_user_script.py",
-            "components": {
-                "load_dataset": {
-                    "type": "load_tiny_code_dataset"
-                }
-            },
             "params_config": {
-                "data_name": "nampdn-ai/tiny-codes",
+                "data_name": "json",
+                "data_files": "./dataset/dataset-classification.json",
                 "split": "train",
                 "component_kwargs": {
-                    "load_dataset": {
-                        "language": "Python",
-                        "token": true
-                    },
                     "pre_process_data": {
                         "dataset_type": "corpus",
-                        "text_template": "### Question: {prompt} \n### Answer: {response}",
+                        "text_cols": [
+                            "phrase",
+                            "tone"
+                        ],
+                        "text_template": "### Text: {phrase}\\n### The tone is:\\n{tone}",
                         "corpus_strategy": "join",
                         "source_max_len": 1024,
                         "pad_to_max_len": false,
