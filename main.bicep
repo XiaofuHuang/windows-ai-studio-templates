@@ -159,7 +159,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'apt-get install -y curl; cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; python3 ./finetuning/invoke_olive.py'
+            'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
           ]
           resources: {
             cpu: 24
@@ -214,7 +214,7 @@ resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; python3 ./finetuning/invoke_olive.py'
+            'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
           ]
           resources: {
             cpu: 24
