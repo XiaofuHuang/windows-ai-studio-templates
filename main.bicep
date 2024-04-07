@@ -1,13 +1,13 @@
 param location string = 'northeurope'
-param resourcePrefix string = 'xftest7'
+param resourcePrefix string = 'xftest9'
 param storageAccountName string = '${resourcePrefix}storage'
 param fileShareName string = '${resourcePrefix}fileshare'
 param environmentName string = '${resourcePrefix}env'
 param environmentStorageName string = '${resourcePrefix}envstorage'
 param acaName string = '${resourcePrefix}aca'
 param volumeName string = '${resourcePrefix}volume'
+param acaJobName string = '${resourcePrefix}acajob'
 
-@description('Generated from /subscriptions/1756abc0-3554-4341-8d6a-46674962ea19/resourceGroups/aca_gpu_xiaofhua/providers/Microsoft.Storage/storageAccounts/filescreatedbycli')
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   sku: {
     name: 'Standard_LRS'
@@ -41,7 +41,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-@description('Generated from /subscriptions/1756abc0-3554-4341-8d6a-46674962ea19/resourceGroups/aca_gpu_xiaofhua/providers/Microsoft.Storage/storageAccounts/filescreatedbycli/fileServices/default')
 resource defaultFileService 'Microsoft.Storage/storageAccounts/fileServices@2023-01-01' = {
   parent: storageAccount
   name: 'default'
@@ -76,7 +75,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   }
 }
 
-@description('Generated from /subscriptions/1756abc0-3554-4341-8d6a-46674962ea19/resourceGroups/aca_gpu_xiaofhua/providers/Microsoft.App/managedEnvironments/managedEnvironment-acagpuxiaofhua-822b')
 resource environment 'Microsoft.App/managedEnvironments@2023-11-02-preview' = {
   name: environmentName
   location: location
@@ -121,7 +119,6 @@ resource environment 'Microsoft.App/managedEnvironments@2023-11-02-preview' = {
   }
 }
 
-@description('Generated from /subscriptions/1756abc0-3554-4341-8d6a-46674962ea19/resourceGroups/aca_gpu_xiaofhua/providers/Microsoft.App/managedEnvironments/managedEnvironment-acagpuxiaofhua-822b/storages/mystoragemount')
 resource envStorage 'Microsoft.App/managedEnvironments/storages@2023-11-02-preview' = {
   parent: environment
   name: environmentStorageName
@@ -135,8 +132,64 @@ resource envStorage 'Microsoft.App/managedEnvironments/storages@2023-11-02-previ
   }
 }
 
-@description('Generated from /subscriptions/1756abc0-3554-4341-8d6a-46674962ea19/resourceGroups/aca_gpu_xiaofhua/providers/Microsoft.App/containerapps/finetune-aca-file')
-resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
+resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
+  name: acaJobName
+  location: location
+  properties: {
+    environmentId: environment.id
+    workloadProfileName: 'GPU'
+    configuration: {
+      secrets: null
+      triggerType: 'Manual'
+      replicaTimeout: 1800
+      replicaRetryLimit: 0
+      manualTriggerConfig: {
+        replicaCompletionCount: 1
+        parallelism: 1
+      }
+      scheduleTriggerConfig: null
+      eventTriggerConfig: null
+      registries: null
+    }
+    template: {
+      containers: [
+        {
+          image: 'docker.io/huggingface/transformers-all-latest-gpu'
+          name: 'xtest7job'
+          command: [
+            '/bin/bash'
+            '-c'
+            '/bin/bash, -c, apt-get install -y curl; cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; python3 ./finetuning/invoke_olive.py'
+          ]
+          resources: {
+            cpu: 24
+            memory: '220Gi'
+          }
+          volumeMounts: [
+            {
+              volumeName: volumeName
+              mountPath: '/mount'
+            }
+          ]
+        }
+      ]
+      initContainers: null
+      volumes: [
+        {
+          name: volumeName
+          storageType: 'AzureFile'
+          storageName: envStorage.name
+        }
+      ]
+    }
+  }
+  identity: {
+    type: 'None'
+  }
+}
+
+
+resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
   name: acaName
   location: location
   properties: {
@@ -145,41 +198,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
     configuration: {
       secrets: null
       activeRevisionsMode: 'Single'
-      ingress: {
-        external: true
-        targetPort: 80
-        exposedPort: 0
-        transport: 'Auto'
-        traffic: [
-          {
-            weight: 100
-            latestRevision: true
-          }
-        ]
-        customDomains: null
-        allowInsecure: true
-        ipSecurityRestrictions: null
-        corsPolicy: {
-          allowedOrigins: [
-            '*'
-          ]
-          allowedMethods: [
-            '*'
-          ]
-          allowedHeaders: [
-            '*'
-          ]
-          exposeHeaders: null
-          maxAge: 0
-          allowCredentials: true
-        }
-        clientCertificateMode: 'Ignore'
-        stickySessions: {
-          affinity: 'none'
-        }
-        additionalPortMappings: null
-        targetPortHttpScheme: null
-      }
+      ingress: null
       registries: null
       dapr: null
       maxInactiveRevisions: 100
@@ -195,55 +214,16 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'apt-get install -y curl; /mount/server/test.sh; /root/.vscode-server-insiders/bin/2af613979f646fc4dcebfeaedc7d14f138c7b072/bin/code-server-insiders --start-server --host=0.0.0. --accept-server-license-terms --without-connection-token --telemetry-level all --port=80  --install-extension ms-python.python  --install-extension ms-toolsai.jupyter'
+            'sleep 100000000'
           ]
-          // /bin/bash, -c, apt-get install -y curl; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; python3 ./finetuning/invoke_olive.py
           resources: {
             cpu: 24
             memory: '220Gi'
           }
-          // resources: {
-          //   cpu: 4
-          //   memory: '8Gi'
-          // }
-          probes: [
-            {
-              type: 'Liveness'
-              failureThreshold: 3
-              httpGet: {
-                path: '/version'
-                port: 80
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 60
-              periodSeconds: 10
-              successThreshold: 1
-              timeoutSeconds: 1
-            }
-            {
-              type: 'Readiness'
-              httpGet: {
-                path: '/version'
-                port: 80
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 60
-              periodSeconds: 10
-            }
-            {
-              type: 'Startup'
-              httpGet: {
-                path: '/version'
-                port: 80
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 60
-              periodSeconds: 10
-            }
-          ]
+          probes: []
           volumeMounts: [
             {
-              volumeName: volumeName
+              volumeName: 'xftest7volume'
               mountPath: '/mount'
             }
           ]
@@ -257,9 +237,9 @@ resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
       }
       volumes: [
         {
-          name: volumeName
+          name: 'xftest7volume'
           storageType: 'AzureFile'
-          storageName: envStorage.name
+          storageName: 'xftest7envstorage'
         }
       ]
       serviceBinds: null
