@@ -214,7 +214,7 @@ resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'sleep 100000000'
+            '/bin/bash, -c, cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; python3 ./finetuning/invoke_olive.py'
           ]
           resources: {
             cpu: 24
@@ -239,7 +239,7 @@ resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
         {
           name: 'xftest7volume'
           storageType: 'AzureFile'
-          storageName: 'xftest7envstorage'
+          storageName: envStorage.name
         }
       ]
       serviceBinds: null
