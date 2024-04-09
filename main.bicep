@@ -155,7 +155,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
       containers: [
         {
           image: 'docker.io/huggingface/transformers-all-latest-gpu'
-          name: 'xtest7job'
+          name: acaJobName
           command: [
             '/bin/bash'
             '-c'
@@ -189,63 +189,65 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
 }
 
 
-resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
-  name: acaName
-  location: location
-  properties: {
-    environmentId: environment.id
-    workloadProfileName: 'GPU'
-    configuration: {
-      secrets: null
-      activeRevisionsMode: 'Single'
-      ingress: null
-      registries: null
-      dapr: null
-      maxInactiveRevisions: 100
-      service: null
-    }
-    template: {
-      revisionSuffix: ''
-      terminationGracePeriodSeconds: null
-      containers: [
-        {
-          image: 'docker.io/huggingface/transformers-all-latest-gpu'
-          name: 'finetune-aca-file'
-          command: [
-            '/bin/bash'
-            '-c'
-            'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
-          ]
-          resources: {
-            cpu: 24
-            memory: '220Gi'
-          }
-          probes: []
-          volumeMounts: [
-            {
-              volumeName: 'xftest7volume'
-              mountPath: '/mount'
-            }
-          ]
-        }
-      ]
-      initContainers: null
-      scale: {
-        minReplicas: 1
-        maxReplicas: 1
-        rules: null
-      }
-      volumes: [
-        {
-          name: 'xftest7volume'
-          storageType: 'AzureFile'
-          storageName: envStorage.name
-        }
-      ]
-      serviceBinds: null
-    }
-  }
-  identity: {
-    type: 'None'
-  }
-}
+// resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
+//   name: acaName
+//   location: location
+//   properties: {
+//     environmentId: environment.id
+//     workloadProfileName: 'GPU'
+//     configuration: {
+//       secrets: null
+//       activeRevisionsMode: 'Single'
+//       ingress: null
+//       registries: null
+//       dapr: null
+//       maxInactiveRevisions: 100
+//       service: null
+//     }
+//     template: {
+//       revisionSuffix: ''
+//       terminationGracePeriodSeconds: null
+//       containers: [
+//         {
+//           image: 'docker.io/huggingface/transformers-all-latest-gpu'
+//           name: 'finetune-aca-file'
+//           command: [
+//             '/bin/bash'
+//             '-c'
+//             'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
+//           ]
+//           resources: {
+//             cpu: 24
+//             memory: '220Gi'
+//           }
+//           probes: []
+//           volumeMounts: [
+//             {
+//               volumeName: volumeName
+//               mountPath: '/mount'
+//             }
+//           ]
+//         }
+//       ]
+//       initContainers: null
+//       scale: {
+//         minReplicas: 0
+//         maxReplicas: 1
+//         rules: null
+//       }
+//       volumes: [
+//         {
+//           name: volumeName
+//           storageType: 'AzureFile'
+//           storageName: envStorage.name
+//         }
+//       ]
+//       serviceBinds: null
+//     }
+//   }
+//   identity: {
+//     type: 'None'
+//   }
+// }
+
+output endpoint string = acajob.properties.eventStreamEndpoint
