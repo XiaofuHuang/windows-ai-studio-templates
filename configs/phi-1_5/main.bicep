@@ -169,15 +169,14 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
   }
 }
 
-
-output storageAccountName string = storageAccount.name
-output fileShareName string = fileShare.name
-output environmentName string = environment.name
-output subscriptionId string = subscription().subscriptionId
-output tenantId string = subscription().tenantId
-output resourceGroupName string = resourceGroup().name
-output STORAGECONNECTIONSTRING string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
-output acaJobName string = acaJobName
+output STORAGE_ACCOUNT_NAME string = storageAccount.name
+output FILE_SHARE_NAME string = fileShare.name
+output ENV_NAME string = environment.name
+output SUBSCRIPTION_ID string = subscription().subscriptionId
+output TENANT_ID string = subscription().tenantId
+output RESOURCE_GROUP_NAME string = resourceGroup().name
+output STORAGE_CONNECTION_STRING string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+output ACA_JOB_NAME string = acaJobName
 
 // param acaName string = '${resourcePrefix}aca'
 // resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
