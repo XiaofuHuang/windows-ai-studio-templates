@@ -122,7 +122,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
     configuration: {
       secrets: null
       triggerType: 'Manual'
-      replicaTimeout: 1800
+      replicaTimeout: 3600
       replicaRetryLimit: 0
       manualTriggerConfig: {
         replicaCompletionCount: 1
@@ -140,7 +140,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
+            'cd /mount; cd /mount/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
           ]
           resources: {
             cpu: 24
