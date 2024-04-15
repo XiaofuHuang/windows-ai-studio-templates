@@ -1,5 +1,5 @@
 param location string
-param defaultCommand string
+param defaultCommands array
 
 param resourceSuffix string = substring(uniqueString(resourceGroup().id), 0, 5)
 param storageAccountName string = 'wasistorage${resourceSuffix}'
@@ -8,6 +8,8 @@ param acaEnvironmentName string = 'wasienv${resourceSuffix}'
 param acaEnvironmentStorageName string = 'wasienvstorage${resourceSuffix}'
 param acaJobName string = 'wasiacajob${resourceSuffix}'
 param acaLogAnalyticsName string = 'wasilog${resourceSuffix}'
+
+var defaultCommand = join(defaultCommands, '; ')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   sku: {
@@ -169,10 +171,10 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
   }
 }
 
-output TENANT_ID string = subscription().tenantId
+// output TENANT_ID string = subscription().tenantId
 output SUBSCRIPTION_ID string = subscription().subscriptionId
 output RESOURCE_GROUP_NAME string = resourceGroup().name
 output STORAGE_ACCOUNT_NAME string = storageAccount.name
 output FILE_SHARE_NAME string = fileShare.name
 output ACA_JOB_NAME string = acajob.name
-output COMMAND string = defaultCommand
+output COMMANDS array = defaultCommands

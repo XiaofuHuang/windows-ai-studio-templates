@@ -5,8 +5,14 @@
       "location": {
         "value": "westus3"
       },
-      "defaultCommand": {
-        "value": "cd /mount/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py"
+      "defaultCommands": {
+        "value": [
+          "cd /mount/phi-1_5", 
+          "pip install -r ./setup/requirements.txt",
+          "git lfs install",
+          "git clone https://huggingface.co/microsoft/phi-1_5", 
+          "python3 ./finetuning/invoke_olive.py"
+        ]
       },
       "storageAccountName": {
         "value": null
