@@ -1,12 +1,13 @@
-param location string = 'westus3'
-param resourcePrefix string = 'xftest0411'
-param storageAccountName string = '${resourcePrefix}storage'
-param fileShareName string = '${resourcePrefix}fileshare'
-param environmentName string = '${resourcePrefix}env'
-param environmentStorageName string = '${resourcePrefix}envstorage'
-param volumeName string = '${resourcePrefix}volume'
-param acaJobName string = '${resourcePrefix}acajob'
-param containerAppLogAnalyticsName string = '${resourcePrefix}-log'
+param location string
+param defaultCommand string
+
+param resourceSuffix string = substring(uniqueString(resourceGroup().id), 0, 5)
+param storageAccountName string = 'wasistorage${resourceSuffix}'
+param fileShareName string = 'wasifileshare${resourceSuffix}'
+param acaEnvironmentName string = 'wasienv${resourceSuffix}'
+param acaEnvironmentStorageName string = 'wasienvstorage${resourceSuffix}'
+param acaJobName string = 'wasiacajob${resourceSuffix}'
+param acaLogAnalyticsName string = 'wasilog${resourceSuffix}'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   sku: {
@@ -45,9 +46,8 @@ resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-0
   }
 }
 
-
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: containerAppLogAnalyticsName
+  name: acaLogAnalyticsName
   location: location
   properties: {
     sku: {
@@ -57,7 +57,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
 }
 
 resource environment 'Microsoft.App/managedEnvironments@2023-11-02-preview' = {
-  name: environmentName
+  name: acaEnvironmentName
   location: location
   properties: {
     daprAIInstrumentationKey: null
@@ -102,7 +102,7 @@ resource environment 'Microsoft.App/managedEnvironments@2023-11-02-preview' = {
 
 resource envStorage 'Microsoft.App/managedEnvironments/storages@2023-11-02-preview' = {
   parent: environment
-  name: environmentStorageName
+  name: acaEnvironmentStorageName
   properties: {
     azureFile: {
       accountName: storageAccount.name
@@ -140,7 +140,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
           command: [
             '/bin/bash'
             '-c'
-            'cd /mount; cd /mount/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
+            defaultCommand
           ]
           resources: {
             cpu: 24
@@ -148,7 +148,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
           }
           volumeMounts: [
             {
-              volumeName: volumeName
+              volumeName: '${fileShareName}volume'
               mountPath: '/mount'
             }
           ]
@@ -157,7 +157,7 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
       initContainers: null
       volumes: [
         {
-          name: volumeName
+          name: '${fileShareName}volume'
           storageType: 'AzureFile'
           storageName: envStorage.name
         }
@@ -169,73 +169,10 @@ resource acajob 'Microsoft.App/jobs@2023-11-02-preview' = {
   }
 }
 
+output TENANT_ID string = subscription().tenantId
+output SUBSCRIPTION_ID string = subscription().subscriptionId
+output RESOURCE_GROUP_NAME string = resourceGroup().name
 output STORAGE_ACCOUNT_NAME string = storageAccount.name
 output FILE_SHARE_NAME string = fileShare.name
-output ENV_NAME string = environment.name
-output SUBSCRIPTION_ID string = subscription().subscriptionId
-output TENANT_ID string = subscription().tenantId
-output RESOURCE_GROUP_NAME string = resourceGroup().name
-output STORAGE_CONNECTION_STRING string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
-output ACA_JOB_NAME string = acaJobName
-
-// param acaName string = '${resourcePrefix}aca'
-// resource aca 'Microsoft.App/containerApps@2023-11-02-preview' = {
-//   name: acaName
-//   location: location
-//   properties: {
-//     environmentId: environment.id
-//     workloadProfileName: 'GPU'
-//     configuration: {
-//       secrets: null
-//       activeRevisionsMode: 'Single'
-//       ingress: null
-//       registries: null
-//       dapr: null
-//       maxInactiveRevisions: 100
-//       service: null
-//     }
-//     template: {
-//       revisionSuffix: ''
-//       terminationGracePeriodSeconds: null
-//       containers: [
-//         {
-//           image: 'docker.io/huggingface/transformers-all-latest-gpu'
-//           name: 'finetune-aca-file'
-//           command: [
-//             '/bin/bash'
-//             '-c'
-//             'cd /mount; git clone https://github.com/XiaofuHuang/windows-ai-studio-templates.git; cd /mount/windows-ai-studio-templates/configs/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py'
-//           ]
-//           resources: {
-//             cpu: 24
-//             memory: '220Gi'
-//           }
-//           probes: []
-//           volumeMounts: [
-//             {
-//               volumeName: 'xftest7volume'
-//               mountPath: '/mount'
-//             }
-//           ]
-//         }
-//       ]
-//       initContainers: null
-//       scale: {
-//         minReplicas: 1
-//         maxReplicas: 1
-//         rules: null
-//       }
-//       volumes: [
-//         {
-//           name: 'xftest7volume'
-//           storageType: 'AzureFile'
-//           storageName: envStorage.name
-//         }
-//       ]
-//       serviceBinds: null
-//     }
-//   }
-//   identity: {
-//     type: 'None'
-//   }
-// }
+output ACA_JOB_NAME string = acajob.name
+output COMMAND string = defaultCommand

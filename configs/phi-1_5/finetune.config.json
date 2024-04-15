@@ -1,0 +1,9 @@
+{
+  "TENANT_ID": "",
+  "SUBSCRIPTION_ID": "",
+  "RESOURCE_GROUP_NAME": "",
+  "STORAGE_ACCOUNT_NAME": "",
+  "FILE_SHARE_NAME": "",
+  "ACA_JOB_NAME": "",
+  "COMMAND": "cd /mount/phi-1_5; pip install -r ./setup/requirements.txt; git lfs install; git clone https://huggingface.co/microsoft/phi-1_5; python3 ./finetuning/invoke_olive.py"
+}
